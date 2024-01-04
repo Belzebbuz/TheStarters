@@ -1,0 +1,10 @@
+{
+  "SecuritySettings": {
+    "RootUserEmail": "admin@thestarters.ru",
+    "RequireConfirmedAccount": false,
+    "JwtSettings": {
+      "ExpirationInMinutes": 30,
+      "RefreshTokenExpirationInDays": 15
+    }
+  }
+}

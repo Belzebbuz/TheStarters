@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+<ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Mapster" Version="7.4.0" />
+</ItemGroup>
+<ItemGroup>
+  <ProjectReference Include="..\..\..\Server\TheStarters.Server.Abstractions\TheStarters.Server.Abstractions.csproj" />
+  <ProjectReference Include="..\TheStarters.Clients.Web.Domain\TheStarters.Clients.Web.Domain.csproj" />
+</ItemGroup>
+</Project>
