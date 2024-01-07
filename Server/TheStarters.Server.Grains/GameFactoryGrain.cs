@@ -31,8 +31,8 @@ public class GameFactoryGrain : IGameFactoryGrain
 			GameType = gameType
 		};
 		await _client.GetGrain<ITicTacToeGrain>(game.Id).UpdateAsync(game);
-		await _client.GetGrain<IPlayerGrain>(userId).AddToGameAsync(game.Id);
-		await _client.GetGrain<IGamesGrain>(Guid.Empty).AddGameAsync(game);
+		await _client.GetGrain<IPlayerGrain>(userId).AddOrUpdateGameAsync(game);
+		await _client.GetGrain<IGamesGrain>(Guid.Empty).AddOrUpdateGameAsync(game);
 		await _gameIds.WriteStateAsync();
 		return game.Id;
 	}

@@ -3,7 +3,7 @@
     "RootUserEmail": "admin@thestarters.ru",
     "RequireConfirmedAccount": false,
     "JwtSettings": {
-      "ExpirationInMinutes": 30,
+      "ExpirationInMinutes": 3000,
       "RefreshTokenExpirationInDays": 15
     }
   }

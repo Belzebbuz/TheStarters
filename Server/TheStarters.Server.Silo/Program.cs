@@ -2,6 +2,9 @@
 using Orleans.Configuration;
 using StackExchange.Redis;
 using TheStarters.Server.Grains.Consts;
+using TheStarters.Server.Silo;
+using TheStarters.Server.Silo.Settings;
+using Throw;
 
 try
 {
@@ -22,15 +25,17 @@ static async Task<IHost> StartSiloAsync()
 {
 	var builder = WebApplication.CreateBuilder();
 	builder.Host
-		.UseOrleans((_, silo) =>
+		.UseOrleans((hostBuilder, silo) =>
 		{
+			var siloSettings = hostBuilder.Configuration.GetSection(nameof(SiloSettings)).Get<SiloSettings>();
+			siloSettings.ThrowIfNull("Не установлены настройки Silo");
 			silo
 				//.UseLocalhostClustering()
-				.UseZooKeeperClustering(options => { options.ConnectionString = "127.0.0.1:30000"; })
+				.UseZooKeeperClustering(options => { options.ConnectionString = siloSettings.ClusterSettings.ConnectionString; })
 				.Configure<ClusterOptions>(options =>
 				{
-					options.ClusterId = "dev";
-					options.ServiceId = "OrleansTestServer";
+					options.ClusterId = siloSettings.ClusterSettings.ClusterId;
+					options.ServiceId = siloSettings.ClusterSettings.ServiceId;
 				})
 				.AddRedisGrainStorage(StorageConsts.PersistenceStorage, options =>
 				{
@@ -38,7 +43,7 @@ static async Task<IHost> StartSiloAsync()
 					{
 						EndPoints = new EndPointCollection()
 						{
-							{ IPAddress.Parse("192.168.31.103"), 6388 }
+							{ IPAddress.Parse(siloSettings.RedisPersistence.IPAddress), siloSettings.RedisPersistence.Port }
 						}
 					};
 				})

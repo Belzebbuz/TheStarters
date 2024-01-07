@@ -3,19 +3,19 @@ namespace TheStarters.Server.Abstractions.Models;
 [GenerateSerializer, Immutable]
 public record TicTacToeGame : BaseGame
 {
-	[Id(1)]
+	[Id(0)]
 	public Guid Player1 { get; set;	}
 	
-	[Id(2)]
-	public Guid? Player2 { get; private set; }
+	[Id(1)]
+	public Guid? Player2 { get; set; }
 	
-	[Id(3)]
+	[Id(2)]
 	public Guid?[,] Board { get; } = new Guid?[3,3];
 	
-	[Id(5)]
+	[Id(3)]
 	public Guid CurrentPlayer { get; set; }
 
-	public void UpdateSecondPlayer(Guid? id)
+	public void SetSecondPlayer(Guid? id)
 	{
 		Player2 = id;
 		PlayersCount = (byte)(id.HasValue ? 2 : 1);

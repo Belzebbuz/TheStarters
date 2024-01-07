@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Mapster;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using TheStarters.Clients.Web.Application.Abstractions.Services;
@@ -57,7 +58,7 @@ internal class AccountService : IAccountService
         return Result.Fail("Incorrect confirm token");
     }
 
-    public async Task<IResult> SelfRegisterAsync(SelfRegisterRequest request)
+    public async Task<IResult<SelfRegisterResponse>> SelfRegisterAsync(SelfRegisterRequest request)
     {
         var existedUser = await _userManager.FindByEmailAsync(request.Email);
         if(existedUser != null && !existedUser.EmailConfirmed) 
@@ -66,30 +67,30 @@ internal class AccountService : IAccountService
         }
         var user = new AppUser()
         {
-            UserName = request.Email,
+            UserName = request.Name,
             Email = request.Email,
             IsActive = true
         };
         var result = await _userManager.CreateAsync(user, request.Password);
         if (!result.Succeeded)
-            return await Result.FailAsync(messages: GetErrors(result));
+            return await Result<SelfRegisterResponse>.FailAsync(messages: GetErrors(result));
 
         var resultRole = await _userManager.AddToRoleAsync(user, Roles.User);
         if (!resultRole.Succeeded)
         {
             await _userManager.DeleteAsync(user);
-            return await Result.FailAsync(messages: GetErrors(result));
+            return await Result<SelfRegisterResponse>.FailAsync(messages: GetErrors(result));
         }
         if (_securitySettings.RequireConfirmedAccount)
         {
             user.ConfirmationToken = new Random().Next(99999, 1000000);
             await _userManager.UpdateAsync(user);
             var mail = new MailRequest(new() { user.Email },
-                "zhendehanyu.ru Код подтверждение адреса электронной почты", 
+                "zhendehanyu.ru Код подтверждения адреса электронной почты", 
                 $"Код для подтверждения адреса - <h3>{user.ConfirmationToken}</h3>");
             await _mailService.SendAsync(mail, new());
         }
-        return await Result.SuccessAsync();
+        return await Result<SelfRegisterResponse>.SuccessAsync(user.Adapt<SelfRegisterResponse>());
     }
 
     public async Task<IResult> SendResetPasswordCallbackAsync(ResetPasswordCallbackRequest request)

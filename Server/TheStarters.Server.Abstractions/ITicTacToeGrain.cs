@@ -10,4 +10,14 @@ public interface ITicTacToeGrain : IGrainWithIntegerKey
 	ValueTask StartAsync();
 	ValueTask<TicTacToeGame> GetAsync();
 	ValueTask SetAnswerAsync(Guid userId, byte x, byte y);
+	
+	ValueTask SubscribeAsync(ITicTacToeObserver observer);
+	ValueTask UnsubscribeAsync(ITicTacToeObserver observer);
+	ValueTask NotifyAsync();
+}
+
+
+public interface ITicTacToeObserver : IGrainObserver
+{
+	ValueTask GameStateChanged();
 }

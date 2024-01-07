@@ -34,5 +34,10 @@
       <ProjectReference Include="..\..\..\Server\TheStarters.Server.Abstractions\TheStarters.Server.Abstractions.csproj" />
       <ProjectReference Include="..\TheStarters.Clients.Web.Infrastructure\TheStarters.Clients.Web.Infrastructure.csproj" />
     </ItemGroup>
-
+    <ItemGroup>
+        <None Include="wwwroot\**">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <Content Remove="Logs\**" />
+    </ItemGroup>
 </Project>

@@ -1,8 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Orleans.Runtime.Placement;
 using TheStarters.Clients.Web.Api.Controllers.Common;
 using TheStarters.Clients.Web.Application.Abstractions.Services;
 using TheStarters.Clients.Web.Application.Wrapper;
+using TheStarters.Server.Abstractions;
+using TheStarters.Server.Abstractions.Models;
 using IResult = TheStarters.Clients.Web.Application.Wrapper.IResult;
 
 namespace TheStarters.Clients.Web.Api.Controllers;
@@ -20,7 +23,12 @@ public class UserController : CommonController
 	[AllowAnonymous]
 	public async Task<IResult> RegisterAsync([FromServices] IAccountService accountService,
 		SelfRegisterRequest request)
-		=> await accountService.SelfRegisterAsync(request);
+	{
+		var result = await accountService.SelfRegisterAsync(request);
+		await GrainClient.GetGrain<IPlayerGrain>(new Guid(result.Data.UserId))
+			.UpdateProfileAsync(new PlayerProfile() { Name = result.Data.Name });
+		return Result.Success();
+	}
 
 	private string? GetUserAgent() => 
 		Request.Headers.TryGetValue("User-Agent", out var value) ? value : "N/A";
