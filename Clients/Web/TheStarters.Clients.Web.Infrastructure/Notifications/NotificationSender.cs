@@ -17,7 +17,7 @@ public class NotificationSender(
 		=> await hubContext.Clients.User(userId)
 			.SendAsync(_channel, notification.GetType().Name, notification, cancellationToken);
 
-	public async ValueTask SendToUsersAsync(INotificationMessage notification, List<string?> userIds, CancellationToken cancellationToken)
+	public async ValueTask SendToUsersAsync(INotificationMessage notification, IEnumerable<string?> userIds, CancellationToken cancellationToken)
 	{
 		foreach (var userId in userIds.OfType<string>())
 		{

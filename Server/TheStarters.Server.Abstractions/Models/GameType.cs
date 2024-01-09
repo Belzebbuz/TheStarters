@@ -2,5 +2,6 @@
 
 public enum GameType
 {
-	TicTacToe
+	TicTacToe,
+	Monopoly
 }

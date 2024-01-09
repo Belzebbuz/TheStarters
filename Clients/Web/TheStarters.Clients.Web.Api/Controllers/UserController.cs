@@ -25,8 +25,9 @@ public class UserController : CommonController
 		SelfRegisterRequest request)
 	{
 		var result = await accountService.SelfRegisterAsync(request);
-		await GrainClient.GetGrain<IPlayerGrain>(new Guid(result.Data.UserId))
-			.UpdateProfileAsync(new PlayerProfile() { Name = result.Data.Name });
+		var id = new Guid(result.Data.UserId);
+		await GrainClient.GetGrain<IPlayerGrain>(id)
+			.UpdateProfileAsync(new PlayerProfile(id) { Name = result.Data.Name });
 		return Result.Success();
 	}
 

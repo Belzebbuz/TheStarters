@@ -3,20 +3,21 @@ using Orleans.Runtime;
 using TheStarters.Server.Abstractions;
 using TheStarters.Server.Abstractions.Models;
 using TheStarters.Server.Grains.Consts;
+using Throw;
 
 namespace TheStarters.Server.Grains;
 
 public class PlayerGrain : IPlayerGrain
 {
 	private readonly IPersistentState<PlayerProfile> _player;
-	private readonly IPersistentState<Dictionary<long,BaseGame>> _games;
+	private readonly IPersistentState<Dictionary<GameType,HashSet<long>>> _games;
 	private readonly ILogger<PlayerGrain> _logger;
 
 	public PlayerGrain(
 		[PersistentState(stateName: "profile", storageName: StorageConsts.PersistenceStorage)]
 		IPersistentState<PlayerProfile> player,
 		[PersistentState(stateName: "player-games", storageName: StorageConsts.PersistenceStorage)]
-		IPersistentState<Dictionary<long,BaseGame>> games,
+		IPersistentState<Dictionary<GameType,HashSet<long>>> games,
 		ILogger<PlayerGrain> logger)
 	{
 		_player = player;
@@ -35,18 +36,24 @@ public class PlayerGrain : IPlayerGrain
 		await _player.WriteStateAsync();
 	}
 
-	public async ValueTask AddOrUpdateGameAsync(BaseGame game)
+	public async ValueTask JoinGameAsync(GameType gameType, long gameId)
 	{
-		_games.State[game.Id] = game;
+		var games = _games.State.GetValueOrDefault(gameType);
+		if (games is null)
+		{
+			games = new();
+			_games.State[gameType] = games;
+		}
+
+		games.Add(gameId);
 		await _games.WriteStateAsync();
 	}
 
-	public async ValueTask RemoveFromGameAsync(BaseGame game)
+	public async ValueTask RemoveFromGameAsync(GameType gameType, long gameId)
 	{
-		if (!_games.State.Remove(game.Id, out var _))
-		{
-			_logger.LogWarning($"Пользователя уже нет в игре №{game.Id}");
-		}
+		var games = _games.State.GetValueOrDefault(gameType);
+		games.ThrowIfNull($"Пользователь не был добавлен в игры типа {gameType}");
+		games.Remove(gameId);
 		await _games.WriteStateAsync();
 	}
 }

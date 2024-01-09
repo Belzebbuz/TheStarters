@@ -4,6 +4,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using TheStarters.Server.Abstractions;
 using TheStarters.Server.Abstractions.Models;
+using TheStarters.Server.Abstractions.Monopoly;
 
 namespace TheStarters.Clients.Web.Application.ClientSubscriptions;
 
@@ -40,14 +41,28 @@ public class ClientNotifierBackgroundService(
 
 	private async Task SubscribeGameAsync(GameSubscribe request)
 	{
-		if (request.GameType == GameType.TicTacToe)
+		switch (request.GameType)
 		{
-			var observer = provider.GetRequiredService<TicTacToeObserver>();
-			observer.GameId = request.GameId;
-			var reference = client.CreateObjectReference<ITicTacToeObserver>(observer);
-			await client.GetGrain<ITicTacToeGrain>(request.GameId).SubscribeAsync(reference);
-			_activeSubscribes.TryAdd(request, reference);
-			logger.LogInformation($"Подписка для игры №{request.GameId} создана.");
+			case GameType.TicTacToe:
+			{
+				var observer = provider.GetRequiredService<TicTacToeObserver>();
+				observer.GameId = request.GameId;
+				var reference = client.CreateObjectReference<ITicTacToeObserver>(observer);
+				await client.GetGrain<ITicTacToeGrain>(request.GameId).SubscribeAsync(reference);
+				_activeSubscribes.TryAdd(request, reference);
+				logger.LogInformation($"Подписка для игры №{request.GameId} создана.");
+				break;
+			}
+			case GameType.Monopoly:
+			{
+				var observer = provider.GetRequiredService<MonopolyObserver>();
+				observer.GameId = request.GameId;
+				var reference = client.CreateObjectReference<IMonopolyObserver>(observer);
+				await client.GetGrain<IMonopolyGrain>(request.GameId).SubscribeAsync(reference);
+				_activeSubscribes.TryAdd(request, reference);
+				logger.LogInformation($"Подписка для игры №{request.GameId} создана.");
+				break;
+			}
 		}
 	}
 	
@@ -59,9 +74,15 @@ public class ClientNotifierBackgroundService(
 				logger.LogWarning($"Подписка для игры №{request.GameId} не найдена.");
 				return;
 			}
-			
-			if (request.GameType == GameType.TicTacToe && reference is ITicTacToeObserver obj)
-				await client.GetGrain<ITicTacToeGrain>(request.GameId).UnsubscribeAsync(obj);
 
+			switch (request.GameType)
+			{
+				case GameType.TicTacToe when reference is ITicTacToeObserver ticObj:
+					await client.GetGrain<ITicTacToeGrain>(request.GameId).UnsubscribeAsync(ticObj);
+					break;
+				case GameType.Monopoly when reference is IMonopolyObserver monoObj:
+					await client.GetGrain<IMonopolyGrain>(request.GameId).UnsubscribeAsync(monoObj);
+					break;
+			}
 	}
 }

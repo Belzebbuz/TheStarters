@@ -6,6 +6,6 @@ public interface IPlayerGrain : IGrainWithGuidKey
 {
 	ValueTask<PlayerProfile> GetProfileAsync();
 	ValueTask UpdateProfileAsync(PlayerProfile playerProfile);
-	ValueTask AddOrUpdateGameAsync(BaseGame game);
-	ValueTask RemoveFromGameAsync(BaseGame game);
+	ValueTask JoinGameAsync(GameType gameType, long gameId);
+	ValueTask RemoveFromGameAsync(GameType gameType, long gameId);
 }

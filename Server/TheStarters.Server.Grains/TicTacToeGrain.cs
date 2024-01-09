@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
 using Orleans.Runtime;
-using Orleans.Utilities;
 using TheStarters.Server.Abstractions;
 using TheStarters.Server.Abstractions.Models;
 using TheStarters.Server.Grains.Consts;
@@ -8,31 +7,28 @@ using Throw;
 
 namespace TheStarters.Server.Grains;
 
-public class TicTacToeGrain : ITicTacToeGrain
+public class TicTacToeGrain : ObservableGrain<ITicTacToeObserver>, ITicTacToeGrain
 {
-	private readonly IGrainFactory _client;
-	private readonly ILogger<TicTacToeGame> _logger;
+	private readonly ILogger<TicTacToeGrain> _logger;
 	private readonly IPersistentState<TicTacToeGame> _game;
-	private readonly ObserverManager<ITicTacToeObserver> _observerManager;
 	public TicTacToeGrain(
 		[PersistentState(stateName:"ticTacToe",storageName:StorageConsts.PersistenceStorage)] 
 		IPersistentState<TicTacToeGame> game, 
-		IGrainFactory client, 
-		ILogger<TicTacToeGame> logger)
+		ILogger<TicTacToeGrain> logger)
+	:base(logger)
 	{
 		_game = game;
-		_client = client;
 		_logger = logger;
-		_observerManager = new ObserverManager<ITicTacToeObserver>(TimeSpan.FromMinutes(60), _logger);
-
 	}
 
-	public async ValueTask UpdateAsync(TicTacToeGame game)
+	public async ValueTask<TicTacToeGame> InitStateAsync(Guid userId)
 	{
-		_game.State = game;
-		_game.State.Update();
+		var id = this.GetPrimaryKeyLong();
+		_game.State = TicTacToeGame.InitState(id, userId);
 		await _game.WriteStateAsync();
 		await NotifyAsync();
+		_logger.LogInformation($"Игра \"крестики нолики\" №{id} создана.");
+		return _game.State;
 	}
 
 	public async ValueTask AddPlayerAsync(Guid userId)
@@ -45,8 +41,8 @@ public class TicTacToeGrain : ITicTacToeGrain
 		_game.State.Update();
 		await _game.WriteStateAsync();
 		
-		await _client.GetGrain<IPlayerGrain>(userId).AddOrUpdateGameAsync(_game.State);
-		await _client.GetGrain<IGamesGrain>(Guid.Empty).AddOrUpdateGameAsync(_game.State);
+		await GrainFactory.GetGrain<IPlayerGrain>(userId).JoinGameAsync(_game.State.GameType, _game.State.Id);
+		await GrainFactory.GetGrain<IGamesGrain>(Guid.Empty).AddOrUpdateGameAsync(_game.State);
 		await NotifyAsync();
 	}
 
@@ -59,8 +55,8 @@ public class TicTacToeGrain : ITicTacToeGrain
 		_game.State.Update();
 		await _game.WriteStateAsync();
 		
-		await _client.GetGrain<IPlayerGrain>(userId).RemoveFromGameAsync(_game.State);
-		await _client.GetGrain<IGamesGrain>(Guid.Empty).AddOrUpdateGameAsync(_game.State);
+		await GrainFactory.GetGrain<IPlayerGrain>(userId).RemoveFromGameAsync(_game.State.GameType, _game.State.Id);
+		await GrainFactory.GetGrain<IGamesGrain>(Guid.Empty).AddOrUpdateGameAsync(_game.State);
 		
 		await NotifyAsync();
 	}
@@ -73,7 +69,7 @@ public class TicTacToeGrain : ITicTacToeGrain
 		_game.State.CurrentPlayer = _game.State.Player1;
 		await _game.WriteStateAsync();
 
-		await _client.GetGrain<IGamesGrain>(Guid.Empty).AddOrUpdateGameAsync(_game.State);
+		await GrainFactory.GetGrain<IGamesGrain>(Guid.Empty).AddOrUpdateGameAsync(_game.State);
 		await NotifyAsync();
 	}
 
@@ -103,22 +99,10 @@ public class TicTacToeGrain : ITicTacToeGrain
 		await _game.WriteStateAsync();
 		await NotifyAsync();
 	}
-	
-	public ValueTask SubscribeAsync(ITicTacToeObserver observer)
-	{
-		_observerManager.Subscribe(observer,observer);
-		return ValueTask.CompletedTask;
-	}
-
-	public ValueTask UnsubscribeAsync(ITicTacToeObserver observer)
-	{
-		_observerManager.Unsubscribe(observer);
-		return ValueTask.CompletedTask;
-	}
 
 	public ValueTask NotifyAsync()
 	{
-		_observerManager.Notify(ob => ob.GameStateChanged());
+		ObserverManager.Notify(ob => ob.GameStateChanged());
 		return ValueTask.CompletedTask;
 	}
 }

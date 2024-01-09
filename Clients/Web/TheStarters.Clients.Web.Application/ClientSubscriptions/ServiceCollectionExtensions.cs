@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using TheStarters.Server.Abstractions;
 
 namespace TheStarters.Clients.Web.Application.ClientSubscriptions;
 
@@ -10,6 +9,7 @@ public static class ServiceCollectionExtensions
 		services.AddHostedService<ClientNotifierBackgroundService>();
 		services.AddSingleton<SubRequestChannel>();
 		services.AddTransient<TicTacToeObserver>();
+		services.AddTransient<MonopolyObserver>();
 		return services;
 	}
 }

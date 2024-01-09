@@ -9,6 +9,6 @@ public interface INotificationSender : ITransientService
 	ValueTask SendToUserAsync(INotificationMessage notification, string userId,
 		CancellationToken cancellationToken);
 	
-	ValueTask SendToUsersAsync(INotificationMessage notification, List<string?> userIds,
+	ValueTask SendToUsersAsync(INotificationMessage notification, IEnumerable<string?> userIds,
 		CancellationToken cancellationToken);
 }

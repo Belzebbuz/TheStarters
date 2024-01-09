@@ -57,7 +57,7 @@ internal class ExceptionMiddleware : IMiddleware
                     break;
             }
 
-            Log.Error($"{errorResult.Messages.Last()} Request failed with Status Code {context.Response.StatusCode} and Error Id {errorId}.");
+            Log.Error($"{errorResult.Messages.Last()} Request failed with Status Code {context.Response.StatusCode} and Error Id {errorId}.\nStackTrace:{exception.StackTrace}");
             await response.WriteAsync(_jsonSerializer.Serialize(errorResult));
         }
     }

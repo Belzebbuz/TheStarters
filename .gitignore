@@ -6,3 +6,5 @@ riderModule.iml
 node_modules
 .idea
 Clients/angular-client/.vscode
+Clients/Web/TheStarters.Clients.Web.Api/Logs
+Clients/Web/TheStarters.Clients.Web.Api/Logs

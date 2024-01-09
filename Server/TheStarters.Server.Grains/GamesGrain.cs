@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using Mapster;
 using Microsoft.Extensions.Logging;
 using Orleans.Concurrency;
 using Orleans.Runtime;
@@ -10,12 +11,12 @@ namespace TheStarters.Server.Grains;
 
 public class GamesGrain :  IGamesGrain
 {
-	private readonly IPersistentState<ConcurrentDictionary<long,BaseGame>> _createdGames;
+	private readonly IPersistentState<Dictionary<long,BaseGame>> _createdGames;
 	private readonly ILogger<GamesGrain> _logger;
 	
 	public GamesGrain(
-		[PersistentState(stateName:"created-TicTacToe", storageName: StorageConsts.PersistenceStorage)] 
-		IPersistentState<ConcurrentDictionary<long,BaseGame>> createdGames,
+		[PersistentState(stateName:"created-games", storageName: StorageConsts.PersistenceStorage)] 
+		IPersistentState<Dictionary<long,BaseGame>> createdGames,
 		ILogger<GamesGrain> logger)
 	{
 		_createdGames = createdGames;
@@ -31,7 +32,8 @@ public class GamesGrain :  IGamesGrain
 
 	public async ValueTask AddOrUpdateGameAsync(BaseGame game)
 	{
-		_createdGames.State[game.Id] = game;
+		var baseGame = game.Adapt<BaseGame>();
+		_createdGames.State[game.Id] = baseGame;
 		await _createdGames.WriteStateAsync();
 	}
 

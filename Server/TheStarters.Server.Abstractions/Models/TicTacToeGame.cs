@@ -1,3 +1,5 @@
+using org.apache.zookeeper.data;
+
 namespace TheStarters.Server.Abstractions.Models;
 
 [GenerateSerializer, Immutable]
@@ -10,7 +12,7 @@ public record TicTacToeGame : BaseGame
 	public Guid? Player2 { get; set; }
 	
 	[Id(2)]
-	public Guid?[,] Board { get; } = new Guid?[3,3];
+	public required Guid?[,] Board { get; init; }
 	
 	[Id(3)]
 	public Guid CurrentPlayer { get; set; }
@@ -42,5 +44,18 @@ public record TicTacToeGame : BaseGame
 			return Board[0, 2]!.Value;
 
 		return null;
+	}
+
+	public static TicTacToeGame InitState(long id, Guid userId)
+	{
+		return new()
+		{
+			Id = id,
+			Player1 = userId,
+			GameType = GameType.TicTacToe,
+			CreatedOn = DateTime.UtcNow,
+			LastUpdateOn = DateTime.UtcNow,
+			Board = new Guid?[3,3]
+		};
 	}
 }
