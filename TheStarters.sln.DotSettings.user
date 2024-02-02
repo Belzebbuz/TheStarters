@@ -1,0 +1,25 @@
+﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=5e4d9405_002D2271_002D4160_002D97fe_002D182d6e4875fc/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="CreateGame_ShouldBe_Ok" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;xUnit::266791A3-B5B4-4D2A-B617-23A32DE61CB4::net8.0::TheStarters.Server.Tests.TicTacToe.TicTacToeHostedTests.CreateGame_ShouldBe_Ok&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::266791A3-B5B4-4D2A-B617-23A32DE61CB4::net8.0::TheStarters.Server.Tests.TicTacToe.TicTacToeHostedTests.StartGame_OnePlayer_ShouldBeError&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::266791A3-B5B4-4D2A-B617-23A32DE61CB4::net8.0::TheStarters.Server.Tests.TicTacToe.TicTacToeHostedTests.StartGame_TwoPlayers_ShouldBeOk&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::266791A3-B5B4-4D2A-B617-23A32DE61CB4::net8.0::TheStarters.Server.Tests.TicTacToe.TicTacToeHostedTests.SetAnswer_TwoTim_ShouldThrow&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::266791A3-B5B4-4D2A-B617-23A32DE61CB4::net8.0::TheStarters.Server.Tests.TicTacToe.TicTacToeHostedTests.SetAnswer_SamePosition_ShouldThrow&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::266791A3-B5B4-4D2A-B617-23A32DE61CB4::net8.0::TheStarters.Server.Tests.TicTacToe.TicTacToeHostedTests.SetAnswers_InOneRow_WinnerShouldBeSet&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=99e43aba_002Da3e6_002D4bd9_002Da6b3_002D693b2d2a77f6/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="SetAnswers_InOneRow_WinnerShouldBeSet" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;xUnit::266791A3-B5B4-4D2A-B617-23A32DE61CB4::net8.0::TheStarters.Server.Tests.TicTacToe.TicTacToeHostedTests.SetAnswers_InOneRow_WinnerShouldBeSet&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::266791A3-B5B4-4D2A-B617-23A32DE61CB4::net8.0::TheStarters.Server.Tests.Monopoly.MonopolyHostedTests.CreateGame_ShouldBe_Ok&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::266791A3-B5B4-4D2A-B617-23A32DE61CB4::net8.0::TheStarters.Server.Tests.Monopoly.MonopolyHostedTests.AddPlayer_ShouldBe_Ok&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::266791A3-B5B4-4D2A-B617-23A32DE61CB4::net8.0::TheStarters.Server.Tests.Monopoly.MonopolyHostedTests.StartGame_ShouldBe_Ok&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=b8d5b89b_002Dcbb2_002D4871_002Da678_002D3c3d221a0465/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="StartGame_ShouldBe_Ok" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;xUnit::266791A3-B5B4-4D2A-B617-23A32DE61CB4::net8.0::TheStarters.Server.Tests.Monopoly.MonopolyHostedTests.StartGame_ShouldBe_Ok&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::266791A3-B5B4-4D2A-B617-23A32DE61CB4::net8.0::TheStarters.Server.Tests.Monopoly.MonopolyHostedTests.StepOnStreetLand_ShouldAddBuyCommand&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>

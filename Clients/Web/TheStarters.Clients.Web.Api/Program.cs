@@ -1,6 +1,9 @@
 
+using System.Net;
 using Orleans.Configuration;
 using Serilog;
+using StackExchange.Redis;
+using TheStarters.Client.Common;
 using TheStarters.Clients.Web.Api;
 using TheStarters.Clients.Web.Application.Settings.Orleans;
 using TheStarters.Clients.Web.Infrastructure.Extensions;
@@ -20,9 +23,12 @@ try
 		orleansSettings.ThrowIfNull();
 		client
 			//.UseLocalhostClustering()
-			.UseZooKeeperClustering(options =>
+			.UseRedisClustering(options => options.ConfigurationOptions = new()
 			{
-				options.ConnectionString = orleansSettings.ConnectionString;
+				EndPoints = new EndPointCollection()
+				{
+					new(orleansSettings.ConnectionString)
+				}
 			})
 			.Configure<ClusterOptions>(options =>
 			{

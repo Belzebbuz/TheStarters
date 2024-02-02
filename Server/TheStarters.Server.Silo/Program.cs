@@ -1,65 +1,42 @@
 ﻿using System.Net;
 using Orleans.Configuration;
+using Serilog;
 using StackExchange.Redis;
 using TheStarters.Server.Grains.Consts;
 using TheStarters.Server.Silo;
 using TheStarters.Server.Silo.Settings;
 using Throw;
-
+EnsureInitialized();
 try
 {
-	using var host = await StartSiloAsync();
-	Console.WriteLine("\n Press Enter to terminate...");
-	Console.ReadLine();
-	await host.StopAsync();
-	return 0;
+	var builder = WebApplication.CreateBuilder();
+	builder.Host.UseSerilog((_, config) =>
+	{
+		config.WriteTo.Console()
+			.ReadFrom.Configuration(builder.Configuration);
+	});
+	builder.Host.AddOrleans();
+	var app = builder.Build();
+	app.Run();
+	Log.Information("\n Press Enter to terminate...");
 }
 catch (Exception e)
 {
-	Console.WriteLine(e);
-	return 1;
+	EnsureInitialized();
+	Log.Fatal(e, "Unhandled exception");
+}
+finally
+{
+	EnsureInitialized();
+	Log.Information("Server Shutting down...");
+	Log.CloseAndFlush();
 }
 
-
-static async Task<IHost> StartSiloAsync()
+static void EnsureInitialized()
 {
-	var builder = WebApplication.CreateBuilder();
-	builder.Host
-		.UseOrleans((hostBuilder, silo) =>
-		{
-			var siloSettings = hostBuilder.Configuration.GetSection(nameof(SiloSettings)).Get<SiloSettings>();
-			siloSettings.ThrowIfNull("Не установлены настройки Silo");
-			silo
-				//.UseLocalhostClustering()
-				.UseZooKeeperClustering(options => { options.ConnectionString = siloSettings.ClusterSettings.ConnectionString; })
-				.Configure<ClusterOptions>(options =>
-				{
-					options.ClusterId = siloSettings.ClusterSettings.ClusterId;
-					options.ServiceId = siloSettings.ClusterSettings.ServiceId;
-				})
-				.AddRedisGrainStorage(StorageConsts.PersistenceStorage, options =>
-				{
-					options.ConfigurationOptions = new()
-					{
-						EndPoints = new EndPointCollection()
-						{
-							{ IPAddress.Parse(siloSettings.RedisPersistence.IPAddress), siloSettings.RedisPersistence.Port }
-						}
-					};
-				})
-				.ConfigureLogging(logging => logging.AddConsole())
-				.UseDashboard(options =>
-				{
-					options.Username = "username";
-					options.Password = "password";
-					options.Host = "*";
-					options.Port = 9000;
-					options.HostSelf = true;
-					options.CounterUpdateIntervalMs = 1000;
-				});
-		});
-
-	var host = builder.Build();
-	await host.StartAsync();
-	return host;
+	if (Log.Logger is not Serilog.Core.Logger)
+		Log.Logger = new LoggerConfiguration()
+			.Enrich.FromLogContext()
+			.WriteTo.Console()
+			.CreateLogger();
 }

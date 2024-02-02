@@ -38,11 +38,11 @@ public class TicTacToeGrain : ObservableGrain<ITicTacToeObserver>, ITicTacToeGra
 		if (_game.State.Player2.HasValue)
 			throw new InvalidOperationException("Все места заняты");
 		_game.State.SetSecondPlayer(userId);
-		_game.State.Update();
+		_game.State.UpdateTime();
 		await _game.WriteStateAsync();
 		
 		await GrainFactory.GetGrain<IPlayerGrain>(userId).JoinGameAsync(_game.State.GameType, _game.State.Id);
-		await GrainFactory.GetGrain<IGamesGrain>(Guid.Empty).AddOrUpdateGameAsync(_game.State);
+		await GrainFactory.GetGrain<IGamesListGrain>(Guid.Empty).AddOrUpdateGameAsync(_game.State);
 		await NotifyAsync();
 	}
 
@@ -52,24 +52,26 @@ public class TicTacToeGrain : ObservableGrain<ITicTacToeObserver>, ITicTacToeGra
 		_game.State.Player1.Throw("Невозможно удалить создателя сессии").IfEquals(userId);
 		_game.State.Player2.ThrowIfNull("Такой пользователь отсутствует в сессии").IfNotEquals(userId);
 		_game.State.SetSecondPlayer(null);
-		_game.State.Update();
+		_game.State.UpdateTime();
 		await _game.WriteStateAsync();
 		
 		await GrainFactory.GetGrain<IPlayerGrain>(userId).RemoveFromGameAsync(_game.State.GameType, _game.State.Id);
-		await GrainFactory.GetGrain<IGamesGrain>(Guid.Empty).AddOrUpdateGameAsync(_game.State);
+		await GrainFactory.GetGrain<IGamesListGrain>(Guid.Empty).AddOrUpdateGameAsync(_game.State);
 		
 		await NotifyAsync();
 	}
 
-	public async ValueTask StartAsync()
+	public async ValueTask StartAsync(Guid userId)
 	{
-		_game.State.Started.Throw("Игра еще уже начата").IfTrue();
-		_game.State.Player2.HasValue.Throw("Необходим второй игрок").IfFalse();
+		if (userId != _game.State.Player1)
+			throw new InvalidOperationException("Этот игрок не может начать игру");
+		_game.State.Started.Throw(() => new InvalidOperationException("Игра еще уже начата")).IfTrue();
+		_game.State.Player2.HasValue.Throw(() => new InvalidOperationException("Необходим второй игрок")).IfFalse();
 		_game.State.Started = true;
 		_game.State.CurrentPlayer = _game.State.Player1;
 		await _game.WriteStateAsync();
 
-		await GrainFactory.GetGrain<IGamesGrain>(Guid.Empty).AddOrUpdateGameAsync(_game.State);
+		await GrainFactory.GetGrain<IGamesListGrain>(Guid.Empty).AddOrUpdateGameAsync(_game.State);
 		await NotifyAsync();
 	}
 
@@ -78,13 +80,14 @@ public class TicTacToeGrain : ObservableGrain<ITicTacToeObserver>, ITicTacToeGra
 
 	public async ValueTask SetAnswerAsync(Guid userId, byte x, byte y)
 	{
-		_game.State.Started.Throw("Игра еще не начата").IfFalse();
+		_game.State.Started.Throw("Игра еще не начатa").IfFalse();
 		_game.State.Winner.HasValue.Throw("Игра уже закончена").IfTrue();
-		_game.State.CurrentPlayer.Throw("Ход другого игрока").IfNotEquals(userId);
+		_game.State.CurrentPlayer.HasValue.Throw("Текущий игрок не установлен").IfFalse();
+		_game.State.CurrentPlayer!.Value.Throw("Ход другого игрока").IfNotEquals(userId);
 		_game.State.Board[x, y].HasValue.Throw("Поле уже имеет значение").IfTrue();
 		_game.State.Board[x, y] = userId;
 		var winner = _game.State.GetWinner();
-		_game.State.Update();
+		_game.State.UpdateTime();
 		if (winner is not null)
 		{
 			_game.State.Winner = winner;

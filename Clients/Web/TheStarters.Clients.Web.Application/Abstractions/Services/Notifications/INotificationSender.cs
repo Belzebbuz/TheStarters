@@ -1,4 +1,4 @@
-﻿using TheStarters.Clients.Web.Application.Abstractions.DI;
+﻿using TheStarters.Client.Common.Abstractions.DI;
 
 namespace TheStarters.Clients.Web.Application.Abstractions.Services.Notifications;
 

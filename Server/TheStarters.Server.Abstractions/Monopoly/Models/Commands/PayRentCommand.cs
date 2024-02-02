@@ -1,22 +1,28 @@
-﻿using TheStarters.Server.Abstractions.Monopoly.Models.Lands;
+﻿using TheStarters.Server.Abstractions.Exceptions;
+using TheStarters.Server.Abstractions.Monopoly.Models.Abstractions;
+using TheStarters.Server.Abstractions.Monopoly.Models.Consts;
+using TheStarters.Server.Abstractions.Monopoly.Models.Lands;
 using Throw;
 
 namespace TheStarters.Server.Abstractions.Monopoly.Models.Commands;
 
-public sealed class PayRentCommand(bool required) : MonopolyCommand(required)
+[GenerateSerializer, Immutable]
+public sealed class PayRentCommand(short value) : MonopolyCommand
 {
-	public override void Execute(MonopolyGame game)
+	public override string Description { get; } = CommandDescriptions.PayRent(value);
+	public override void Execute(MonopolyGame game, MonopolyPlayer currentPlayer)
 	{
-		if (game.Board[game.CurrentPlayer!.LandId] is not CompanyLand companyLand)
-			throw new InvalidOperationException("Поле не является полем компании.");
-		if(companyLand.Owner is null)
-			throw new InvalidOperationException("Компания не имеет хозяина для уплаты налога.");
-		if (game.CurrentPlayer!.Id == companyLand.Owner.Id)
-			throw new InvalidOperationException("Игрок является хозяином компании");
-		if (game.CurrentPlayer.Balance < companyLand.Tax)
-			throw new InvalidOperationException("У игрока недостаточно средств для оплаты аренды");
-		game.CurrentPlayer.Balance -= companyLand.Tax;
-		companyLand.Owner.Balance += companyLand.Tax;
-		game.CurrentPlayer.RemoveCommand(Id);
+		if (game.Board[currentPlayer.LandId] is not IRentLand taxLand)
+			throw new GameStateException("Поле не является полем компании.");
+		if(taxLand.OwnerId is null)
+			throw new GameStateException("Компания не имеет хозяина для уплаты налога.");
+		if (currentPlayer.Id == taxLand.OwnerId)
+			throw new GameStateException("Игрок является хозяином компании");
+		if (currentPlayer.Balance < taxLand.Tax)
+			throw new GameStateException("У игрока недостаточно средств для оплаты аренды");
+		var owner = game.Players[taxLand.OwnerId.Value];
+		currentPlayer.Balance -= taxLand.Tax;
+		owner.Balance += taxLand.Tax;
+		currentPlayer.RemoveCommand(Id);
 	}
 }

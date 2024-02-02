@@ -8,7 +8,7 @@ namespace TheStarters.Clients.Web.Infrastructure.Services;
 
 public class SystemJsonService : ISerializerService
 {
-	private readonly JsonSerializerOptions _options = new JsonSerializerOptions()
+	private readonly JsonSerializerOptions? _options = new JsonSerializerOptions()
 	{
 		PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
 		Encoder = JavaScriptEncoder.Create(UnicodeRanges.All)
@@ -17,7 +17,7 @@ public class SystemJsonService : ISerializerService
 	/// <inheritdoc/>
 	public T? Deserialize<T>(string text)
 	{
-		return JsonSerializer.Deserialize<T>(text.ThrowIfNull(), _options).ThrowIfNull();
+		return JsonSerializer.Deserialize<T>(text.ThrowIfNull(), _options);
 	}
 
 	/// <inheritdoc/>

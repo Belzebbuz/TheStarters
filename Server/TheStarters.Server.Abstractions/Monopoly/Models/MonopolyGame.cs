@@ -1,6 +1,6 @@
-﻿using TheStarters.Server.Abstractions.Models;
-using TheStarters.Server.Abstractions.Monopoly.Models.Commands;
-using TheStarters.Server.Abstractions.Monopoly.Models.Lands;
+﻿using TheStarters.Server.Abstractions.Exceptions;
+using TheStarters.Server.Abstractions.Models;
+using TheStarters.Server.Abstractions.Monopoly.Models.Abstractions;
 using Throw;
 
 namespace TheStarters.Server.Abstractions.Monopoly.Models;
@@ -8,23 +8,35 @@ namespace TheStarters.Server.Abstractions.Monopoly.Models;
 [GenerateSerializer, Immutable]
 public sealed record MonopolyGame : BaseGame
 {
-	[Id(0)] public List<MonopolyPlayer> Players { get; set; } = new (8);
-	[Id(1)] public MonopolyPlayer? CurrentPlayer { get; set; }
+	[Id(0)] public IDictionary<Guid,MonopolyPlayer> Players { get; set; } = new Dictionary<Guid, MonopolyPlayer>(8);
+	[Id(1)] public Guid? CurrentPlayerId { get; set; }
 	[Id(2)] public required Dictionary<byte,MonopolyLand> Board { get; init; } = [];
 	[Id(3)] public DicePair DicePair { get; } = new();
+	[Id(4)] public bool AuctionStarted { get; set; }
+
+	private MonopolyGame()
+	{
+	}
 	public void ExecuteCommand(MonopolyCommand command)
 	{
-		CurrentPlayer.ThrowIfNull("Текущий игрок не установлен");
-		var existCommand = CurrentPlayer.Commands[command.Id];
-		existCommand.ThrowIfNull($"Игрок {CurrentPlayer.Name} не обладает таким действием");
-		existCommand.Execute(this);
+		CurrentPlayerId.ThrowIfNull("Текущий игрок не установлен");
+		var currentPlayer = Players[CurrentPlayerId.Value];
+		var existCommand = currentPlayer.Commands[command.Id];
+		existCommand.ThrowIfNull($"Игрок {currentPlayer.Name} не обладает таким действием");
+		existCommand.Execute(this,currentPlayer);
 	}
-
+	public void ExecuteCommand(MonopolyCommand command, Guid playerId)
+	{
+		if (!Players.TryGetValue(playerId, out var player))
+			throw new GameStateException("Пользователя нет в данной сессии.");
+		var existCommand = player.Commands[command.Id];
+		existCommand.Execute(this,player);
+	}
 	public void ShufflePlayers()
 	{
-		var players = Players.ToArray();
+		var players = Players.Values.ToArray();
 		Random.Shared.Shuffle(players);
-		Players = players.ToList();
+		Players = players.ToDictionary(x => x.Id, x => x);
 	}
 	public static MonopolyGame InitState(long id, PlayerProfile player, Dictionary<byte,MonopolyLand> board)
 	{
@@ -35,9 +47,9 @@ public sealed record MonopolyGame : BaseGame
 			CreatedOn = DateTime.UtcNow,
 			LastUpdateOn = DateTime.UtcNow,
 			PlayersCount = 1,
-			GameType = GameType.Monopoly
+			GameType = GameType.Monopoly,
 		};
-		game.Players.Add(new MonopolyPlayer(player.Id,player.Name ?? "N/A"));
+		game.Players.Add( player.Id, new MonopolyPlayer(player.Id,player.Name));
 		return game;
 	}
 }

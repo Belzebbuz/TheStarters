@@ -5,12 +5,12 @@ namespace TheStarters.Clients.Web.Application.Abstractions.Exceptions;
 public abstract class BaseApplicationException : Exception
 {
 	public HttpStatusCode StatusCode { get; init; }
-	public List<string>? ErrorMessages { get; }
+	public string? ErrorMessage { get; }
 	
-	public BaseApplicationException(string message, List<string>? errors = default, HttpStatusCode statusCode = HttpStatusCode.InternalServerError)
+	public BaseApplicationException(string message, string? error = default, HttpStatusCode statusCode = HttpStatusCode.InternalServerError)
 		: base(message)
 	{
-		ErrorMessages = errors;
+		ErrorMessage = error;
 		StatusCode = statusCode;
 	}
 }

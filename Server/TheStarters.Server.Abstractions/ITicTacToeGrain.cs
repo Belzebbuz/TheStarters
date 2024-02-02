@@ -7,7 +7,7 @@ public interface ITicTacToeGrain : IGrainWithIntegerKey, IObservableGrain<ITicTa
 	ValueTask<TicTacToeGame> InitStateAsync(Guid userId);
 	ValueTask AddPlayerAsync(Guid userId);
 	ValueTask RemovePlayerAsync(Guid userId);
-	ValueTask StartAsync();
+	ValueTask StartAsync(Guid userId);
 	ValueTask<TicTacToeGame> GetAsync();
 	ValueTask SetAnswerAsync(Guid userId, byte x, byte y);
 }

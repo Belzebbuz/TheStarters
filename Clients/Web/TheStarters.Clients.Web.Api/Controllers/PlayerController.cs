@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using TheStarters.Client.Common.Abstractions;
 using TheStarters.Clients.Web.Api.Controllers.Common;
 using TheStarters.Clients.Web.Application.Abstractions.Services;
 using TheStarters.Server.Abstractions;
@@ -16,7 +17,7 @@ public class PlayerController(ICurrentUser user) : CommonController
 	
 	[HttpPut("profile")]
 	public async Task GetProfileAsync(
-		PlayerProfile profile)
+		string name)
 		=> await GrainClient.GetGrain<IPlayerGrain>(user.GetUserId())
-			.UpdateProfileAsync(profile);
+			.SetNameAsync(name);
 }

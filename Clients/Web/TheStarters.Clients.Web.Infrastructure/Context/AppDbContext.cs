@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using TheStarters.Client.Common.Abstractions;
 using TheStarters.Clients.Web.Application.Abstractions.Services;
 
 namespace TheStarters.Clients.Web.Infrastructure.Context;

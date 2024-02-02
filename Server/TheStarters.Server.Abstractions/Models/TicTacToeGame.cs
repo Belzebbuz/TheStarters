@@ -15,7 +15,7 @@ public record TicTacToeGame : BaseGame
 	public required Guid?[,] Board { get; init; }
 	
 	[Id(3)]
-	public Guid CurrentPlayer { get; set; }
+	public Guid? CurrentPlayer { get; set; }
 
 	public void SetSecondPlayer(Guid? id)
 	{

@@ -11,5 +11,5 @@ public record BaseGame
 	[Id(5)] public DateTime LastUpdateOn { get; set; }
 	[Id(6)] public GameType GameType { get; init; }
 
-	public void Update() => LastUpdateOn = DateTime.UtcNow;
+	public void UpdateTime() => LastUpdateOn = DateTime.UtcNow;
 }

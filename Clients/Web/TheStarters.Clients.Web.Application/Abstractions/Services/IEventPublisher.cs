@@ -1,4 +1,4 @@
-﻿using TheStarters.Clients.Web.Application.Abstractions.DI;
+﻿using TheStarters.Client.Common.Abstractions.DI;
 using TheStarters.Clients.Web.Domain.Common.Contracts;
 
 namespace TheStarters.Clients.Web.Application.Abstractions.Services;

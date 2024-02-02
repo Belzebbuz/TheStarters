@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using TheStarters.Clients.Web.Application.ClientSubscriptions.Observers;
 using TheStarters.Server.Abstractions;
 using TheStarters.Server.Abstractions.Models;
 using TheStarters.Server.Abstractions.Monopoly;
@@ -16,9 +17,12 @@ public class ClientNotifierBackgroundService(
 	: BackgroundService
 {
 	private readonly ConcurrentDictionary<GameSubscribe, IGrainObserver> _activeSubscribes = new();
+	private readonly ConcurrentBag<IGrainObserver> _observers = new();
 	protected override async Task ExecuteAsync(CancellationToken stoppingToken)
 	{
 		await LoadStartedGamesAsync();
+		await SubscribeGameListAsync();
+		await SubscribeGameFactoryAsync();
 		await foreach (var request in requestChannel.Requests.Reader.ReadAllAsync(stoppingToken))
 		{
 			var _ = request switch
@@ -30,9 +34,27 @@ public class ClientNotifierBackgroundService(
 		}
 	}
 
+	private async Task SubscribeGameFactoryAsync()
+	{
+		var observer = provider.GetRequiredService<GameFactoryObserver>();
+		var reference = client.CreateObjectReference<IGameFactoryObserver>(observer);
+		await client.GetGrain<IGameFactoryGrain>(Guid.Empty).SubscribeAsync(reference);
+		logger.LogInformation("Создана подписка на создание игры");
+		_observers.Add(reference);
+	}
+
+	private async Task SubscribeGameListAsync()
+	{
+		var observer = provider.GetRequiredService<GameListObserver>();
+		var reference = client.CreateObjectReference<IGamesListObserver>(observer);
+		await client.GetGrain<IGamesListGrain>(Guid.Empty).SubscribeAsync(reference);
+		logger.LogInformation("Создана подписка на обновление списка игр");
+		_observers.Add(reference);
+	}
+
 	private async Task LoadStartedGamesAsync()
 	{
-		var lastUpdatedGames = await client.GetGrain<IGamesGrain>(Guid.Empty).GetLastUpdatedAsync();
+		var lastUpdatedGames = await client.GetGrain<IGamesListGrain>(Guid.Empty).GetLastUpdatedAsync();
 		foreach (var subscribe in lastUpdatedGames.Value.Select(game => new GameSubscribe(game.GameType, game.Id)))
 		{
 			await SubscribeGameAsync(subscribe);

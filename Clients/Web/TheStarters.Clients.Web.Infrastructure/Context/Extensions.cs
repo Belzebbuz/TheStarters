@@ -15,7 +15,6 @@ internal static class Extensions
     {
         var dbSettings = GetDbSettings(config);
         return services
-            .AddTransient<DbSeeder>()
             .AddRepositories()
             .AddSingleton(dbSettings)
             .AddDbContext<AppDbContext>(m => m.UseDatabase(dbSettings.Provider!, dbSettings.ConnectionString!));
@@ -26,7 +25,6 @@ internal static class Extensions
         using var scope = app.ApplicationServices.CreateScope();
         var context = scope.ServiceProvider.GetService<T>();
         await context!.Database.MigrateAsync();
-        await scope.ServiceProvider.GetService<DbSeeder>()!.SeedDataAsync();
     }
 
     private static DatabaseSettings GetDbSettings(IConfiguration config)

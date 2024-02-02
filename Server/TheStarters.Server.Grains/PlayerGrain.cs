@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Orleans.Core;
 using Orleans.Runtime;
 using TheStarters.Server.Abstractions;
 using TheStarters.Server.Abstractions.Models;
@@ -7,53 +8,49 @@ using Throw;
 
 namespace TheStarters.Server.Grains;
 
-public class PlayerGrain : IPlayerGrain
+public class PlayerGrain(
+	[PersistentState(stateName: "profile", storageName: StorageConsts.PersistenceStorage)]
+	IStorage<PlayerProfile> player,
+	[PersistentState(stateName: "player-games", storageName: StorageConsts.PersistenceStorage)]
+	IStorage<Dictionary<GameType, HashSet<long>>> games,
+	ILogger<PlayerGrain> logger)
+	: ObservableGrain<IPlayerObserver>(logger), IPlayerGrain
 {
-	private readonly IPersistentState<PlayerProfile> _player;
-	private readonly IPersistentState<Dictionary<GameType,HashSet<long>>> _games;
-	private readonly ILogger<PlayerGrain> _logger;
-
-	public PlayerGrain(
-		[PersistentState(stateName: "profile", storageName: StorageConsts.PersistenceStorage)]
-		IPersistentState<PlayerProfile> player,
-		[PersistentState(stateName: "player-games", storageName: StorageConsts.PersistenceStorage)]
-		IPersistentState<Dictionary<GameType,HashSet<long>>> games,
-		ILogger<PlayerGrain> logger)
-	{
-		_player = player;
-		_games = games;
-		_logger = logger;
-	}
+	private readonly ILogger<PlayerGrain> _logger = logger;
 
 	public ValueTask<PlayerProfile> GetProfileAsync()
-		=> ValueTask.FromResult(_player.State);
+		=> ValueTask.FromResult(player.State);
 
-	public async ValueTask UpdateProfileAsync(PlayerProfile playerProfile)
+	public async Task SetNameAsync(string name)
 	{
-		if (playerProfile.Name is null)
-			throw new ArgumentException("Пользователь должен указать имя");
-		_player.State = playerProfile;
-		await _player.WriteStateAsync();
+		name.ThrowIfNull().IfEmpty();
+		var id = this.GetPrimaryKey();
+		player.State.Name = name;
+		player.State.Id = id;
+		await player.WriteStateAsync();
+		ObserverManager.Notify(x => x.StateHasChanged());
 	}
 
-	public async ValueTask JoinGameAsync(GameType gameType, long gameId)
+	public async Task JoinGameAsync(GameType gameType, long gameId)
 	{
-		var games = _games.State.GetValueOrDefault(gameType);
-		if (games is null)
+		var games1 = games.State.GetValueOrDefault(gameType);
+		if (games1 is null)
 		{
-			games = new();
-			_games.State[gameType] = games;
+			games1 = new();
+			games.State[gameType] = games1;
 		}
 
-		games.Add(gameId);
-		await _games.WriteStateAsync();
+		games1.Add(gameId);
+		await games.WriteStateAsync();
+		ObserverManager.Notify(x => x.StateHasChanged());
 	}
 
-	public async ValueTask RemoveFromGameAsync(GameType gameType, long gameId)
+	public async Task RemoveFromGameAsync(GameType gameType, long gameId)
 	{
-		var games = _games.State.GetValueOrDefault(gameType);
-		games.ThrowIfNull($"Пользователь не был добавлен в игры типа {gameType}");
-		games.Remove(gameId);
-		await _games.WriteStateAsync();
+		var games1 = games.State.GetValueOrDefault(gameType);
+		games1.ThrowIfNull($"Пользователь не был добавлен в игры типа {gameType}");
+		games1.Remove(gameId);
+		await games.WriteStateAsync();
+		ObserverManager.Notify(x => x.StateHasChanged());
 	}
 }

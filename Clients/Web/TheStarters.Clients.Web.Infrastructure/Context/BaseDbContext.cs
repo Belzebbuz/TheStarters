@@ -1,14 +1,12 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
+﻿using Microsoft.EntityFrameworkCore;
+using TheStarters.Client.Common.Abstractions;
 using TheStarters.Clients.Web.Application.Abstractions.Services;
 using TheStarters.Clients.Web.Domain.Common.Contracts;
 using TheStarters.Clients.Web.Infrastructure.Auditing;
 using TheStarters.Clients.Web.Infrastructure.Context.DbProviders;
-using TheStarters.Clients.Web.Infrastructure.Identity.Models;
 
 namespace TheStarters.Clients.Web.Infrastructure.Context;
-public abstract class BaseDbContext : IdentityDbContext<AppUser>
+public abstract class BaseDbContext : DbContext
 {
     private readonly ISerializerService _serializer;
     private readonly ICurrentUser _currentUser;
