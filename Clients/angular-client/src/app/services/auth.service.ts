@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable,  tap } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, tap, throwError } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { IDataResult } from '../contracts/result.contracts';
 import {
@@ -11,6 +11,7 @@ import {
 import { jwtDecode } from 'jwt-decode';
 import { Router } from '@angular/router';
 import { ITokenUser } from '../contracts/user.dto';
+import { CookieOptionsProvider, CookieService } from 'ngx-cookie';
 
 @Injectable({
   providedIn: 'root',
@@ -23,50 +24,63 @@ export class AuthService {
   private _isAuthenticated$ = new BehaviorSubject<boolean>(false);
   public isAuthenticated = this._isAuthenticated$.asObservable();
   public tokenUser!: ITokenUser;
-  readonly #baseUrl = environment.baseApiUrl + '/token';
-  constructor(private client: HttpClient, private router: Router) {
+  readonly #baseUrl = environment.baseApiIdentityUrl + '/user';
+  constructor(
+    private client: HttpClient,
+    private router: Router,
+    private cookieService: CookieService,
+    private optionsProvider: CookieOptionsProvider
+  ) {
     this._isAuthenticated$.next(!!this.token);
     if (this.token) {
       this.tokenUser = this.getUser(this.token);
     }
   }
 
-  updateToken(): Observable<IDataResult<ITokenResponse>> {
+  updateToken(): Observable<ITokenResponse> {
     const request = new RefreshTokenRequest(this.token, this.refreshToken);
-    return this.client.post<IDataResult<ITokenResponse>>(
+    return this.client.post<ITokenResponse>(
       this.#baseUrl + '/refresh-token',
       request
     );
   }
 
-  login(request: TokenRequest): Observable<IDataResult<ITokenResponse>> {
+  login(request: TokenRequest): Observable<ITokenResponse> {
     return this.client
-      .post<IDataResult<ITokenResponse>>(this.#baseUrl, request)
+      .post<ITokenResponse>(
+        this.#baseUrl+'/token',
+        request
+      )
       .pipe(
+        catchError(err => {
+          console.log(err);
+          return throwError('Invalid username or password');
+        }),
         tap((response) => {
           this.updateAuthState(response);
         })
       );
   }
-  updateAuthState(response: IDataResult<ITokenResponse>) {
-    if (response.succeeded) {
-      this.saveTokens(response);
-      this.tokenUser = this.getUser(response.data.accessToken);
-      this._isAuthenticated$.next(true);
-    }
+  updateAuthState(response: ITokenResponse) {
+    this.saveTokens(response);
+    this.tokenUser = this.getUser(response.accessToken);
+    this._isAuthenticated$.next(true);
   }
 
-  saveTokens(response: IDataResult<ITokenResponse>) {
-    localStorage.setItem(this.TOKEN_NAME, response.data.accessToken);
-    localStorage.setItem(this.REFRESH_TOKEN_NAME, response.data.refreshToken);
+  saveTokens(response: ITokenResponse) {
+    this.optionsProvider.options.secure = true;
+    this.cookieService.put(this.TOKEN_NAME, response.accessToken, this.optionsProvider.options);
+    this.cookieService.put(this.REFRESH_TOKEN_NAME, response.refreshToken, this.optionsProvider.options);
+    console.log(response);
+    console.log(this.cookieService.get(this.TOKEN_NAME));
   }
 
   get token(): string {
-    const result = localStorage.getItem(this.TOKEN_NAME) as string;
+    const result = this.cookieService.get(this.TOKEN_NAME) as string;
     return result;
   }
   get refreshToken(): string {
-    const result = localStorage.getItem(this.REFRESH_TOKEN_NAME) as string;
+    const result = this.cookieService.get(this.REFRESH_TOKEN_NAME) as string;
     return result;
   }
   private getUser(token: string): ITokenUser {
@@ -92,8 +106,8 @@ export class AuthService {
     return this.tokenUser.roles.includes(role);
   }
   public clearTokens() {
-    localStorage.removeItem(this.TOKEN_NAME);
-    localStorage.removeItem(this.REFRESH_TOKEN_NAME);
+    this.cookieService.remove(this.TOKEN_NAME);
+    this.cookieService.remove(this.REFRESH_TOKEN_NAME);
     this._isAuthenticated$.next(false);
   }
   public logout(): void {

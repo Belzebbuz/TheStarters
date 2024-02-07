@@ -2,6 +2,7 @@
 using Orleans.Core;
 using Orleans.Runtime;
 using TheStarters.Server.Abstractions;
+using TheStarters.Server.Abstractions.Exceptions;
 using TheStarters.Server.Abstractions.Models;
 using TheStarters.Server.Grains.Consts;
 using Throw;
@@ -19,7 +20,16 @@ public class PlayerGrain(
 	private readonly ILogger<PlayerGrain> _logger = logger;
 
 	public ValueTask<PlayerProfile> GetProfileAsync()
-		=> ValueTask.FromResult(player.State);
+	{
+		if (player.State.Id == Guid.Empty)
+			throw new GameStateException("У игрока не создан профиль");
+		return ValueTask.FromResult(player.State);
+	}
+
+	public ValueTask<bool> ExistInGame(GameType gameType, long id)
+	{
+		return ValueTask.FromResult(games.State.TryGetValue(gameType, out var gameIds) && gameIds.Contains(id));
+	}
 
 	public async Task SetNameAsync(string name)
 	{

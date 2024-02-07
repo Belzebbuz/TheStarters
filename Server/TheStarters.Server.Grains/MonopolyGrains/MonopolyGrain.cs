@@ -30,6 +30,7 @@ public class MonopolyGrain(
 	{
 		var playerGrain = GrainFactory.GetGrain<IPlayerGrain>(userId);
 		var player = await playerGrain.GetProfileAsync();
+		
 		var board = await GrainFactory.GetGrain<IMonopolyMetadataGrain>(Guid.Empty).ConfigureBoardAsync();
 		var id = this.GetPrimaryKeyLong();
 		game.State = MonopolyGame.InitState(id, player, board);

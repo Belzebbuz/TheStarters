@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Serilog;
 using Serilog.Context;
 using TheStarters.Client.Common.Abstractions;
+using TheStarters.Server.Abstractions.Exceptions;
 
 namespace TheStarters.Client.Common.Middlewares;
 internal class ExceptionMiddleware(ICurrentUser currentUser) : IMiddleware
@@ -29,6 +30,9 @@ internal class ExceptionMiddleware(ICurrentUser currentUser) : IMiddleware
 
             switch (exception)
             {
+                case GameStateException:
+                    response.StatusCode = StatusCodes.Status400BadRequest;
+                    break;
                 case UnauthorizedAccessException: 
                     response.StatusCode = (int)HttpStatusCode.Unauthorized;
                     break;

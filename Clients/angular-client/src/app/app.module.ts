@@ -8,19 +8,27 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { AuthInterceptorProviders } from './interceptors/auth.interceptor';
 import { TuiAccordionModule } from "@taiga-ui/kit";
+import { CookieModule } from "ngx-cookie";
+import { LoginComponent } from './components/login/login.component';
+import { HomeComponent } from './components/home/home.component';
+import { HttpClientModule } from "@angular/common/http";
 
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
+    LoginComponent,
+    HomeComponent
   ],
   imports: [
     BrowserModule,
     AppRoutingModule,
+    HttpClientModule,
       BrowserAnimationsModule,
       TuiRootModule,
       TuiDialogModule,
       TuiAlertModule,
-      TuiAccordionModule
+      TuiAccordionModule,
+      CookieModule.withOptions()
 ],
   providers: [AuthInterceptorProviders, {provide: TUI_SANITIZER, useClass: NgDompurifySanitizer}],
   bootstrap: [AppComponent]
